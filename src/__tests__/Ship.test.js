@@ -1,4 +1,4 @@
-import {Ship} from '../components/Ship.js';
+import {Ship} from '../factories/Ship.js';
 
 test("hit() and isSunk() : increases hit count and marks the ship as sunk when it matches length",()=>{
   const ship = new Ship(3,"carrier");
