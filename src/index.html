@@ -4,9 +4,43 @@
     <title></title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+    :root{
+    background-color:black;
+    color:white;
+    }
+        .game-board {
+  display: grid;
+  grid-template-columns: repeat(10, 30px);
+  grid-template-rows: repeat(10, 30px);
+  gap: 2px;
+}
+
+.board-cell {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #000;
+}
+
+.empty {
+  background-color: #ddd;
+}
+
+.ship {
+  background-color: #999;
+}
+
+.hit {
+  background-color: red;
+}
+
+    </style>
   </head>
   <body>
-  
+    <div class="boards">
+    <div id="player-board" class="game-board"></div>
+  <div id="enemy-board" class="game-board"></div>
+    </div>
     <script src="index.js"></script>
   </body>
 </html>
