@@ -1,0 +1,72 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Battleship Game</title>
+  <style>
+    body {
+      marigin:0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-family: Arial, sans-serif;
+      background-color: black;
+      color: white;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(10, 30px);
+      grid-template-rows: repeat(10, 30px);
+      gap: 2px;
+      margin-top: 20px;
+    }
+
+    .cell {
+      width: 30px;
+      height: 30px;
+      border: 1px solid #000;
+      background-color: #ddd;
+      cursor: pointer;
+    }
+
+    .ship-Carrier {
+  background-color: #5677fc; /* Blue color for Carrier */
+}
+
+.ship-Battleship {
+  background-color: turquoise; /* Red color for Battleship */
+}
+
+.ship-Cruiser {
+  background-color: #56fc77; /* Green color for Cruiser */
+}
+
+.ship-Submarine {
+  background-color: #fcce56; /* Yellow color for Submarine */
+}
+
+.ship-Destroyer {
+  background-color: #bf56fc; /* Purple color for Destroyer */
+}
+
+    .hit {
+      background-color: red;
+    }
+
+    .miss {
+      background-color: #555;
+    }
+  </style>
+<script defer src="main-6d6c29ea40b6026744dd.js"></script></head>
+<body>
+  <h1>Battleship Game</h1>
+  <div id="player-board" class="board"></div>
+  <div id="enemy-board" class="board"></div>
+
+  <script src="index.js"></script>
+</body>
+</html>
+
