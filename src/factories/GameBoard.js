@@ -2,10 +2,19 @@ import { Ship } from './Ship.js';
 
 export class GameBoard {
   constructor() {
-    this.boardSize = 10; // Adjust as needed for game board size
-    this.gameBoard = this.initializeBoard();
-    this.ships = [];
-    this.missedAttacks = [];
+    this.boardSize = 10;
+    this.playerBoard = this.initializeBoard();
+    this.computerBoard = this.initializeBoard();
+    this.ships = [
+      new Ship(5, "Carrier"),
+      new Ship(4, "Battleship"),
+      new Ship(3, "Cruiser"),
+      new Ship(3, "Submarine"),
+      new Ship(2, "Destroyer"),
+    ];
+    this.placeShips(this.playerBoard);
+    this.placeShips(this.computerBoard);
+    this.gameOver = false;
   }
 
   initializeBoard() {
@@ -13,61 +22,130 @@ export class GameBoard {
     for (let i = 0; i < this.boardSize; i++) {
       const row = [];
       for (let j = 0; j < this.boardSize; j++) {
-        row.push(null); // Use null or a custom value to denote empty spaces
+        row.push({ status: "hidden", ship: null });
       }
       board.push(row);
     }
     return board;
   }
 
-placeShip(coordinates, ship, orientation = 'vertical') {
-  const [x, y] = coordinates;
-  if(x >9 || y>9){
-      throw new Error("Invalid Coordinates");
-    }
-  const shipLength = ship.length;
-  const [dx, dy] = orientation === 'horizontal' ? [1, 0] : [0, 1];
-
-  let canPlaceShip = true;
-  for (let i = 0; i < shipLength; i++) {
-    if (this.gameBoard[x + i * dx][y + i * dy] !== null) {
-      canPlaceShip = false;
-      break;
+  placeShips(board) {
+    for (const ship of this.ships) {
+      let placed = false;
+      while (!placed) {
+        const orientation = Math.random() < 0.5 ? "horizontal" : "vertical";
+        const x = Math.floor(Math.random() * this.boardSize);
+        const y = Math.floor(Math.random() * this.boardSize);
+        placed = this.tryPlaceShip(board, x, y, orientation, ship);
+      }
     }
   }
 
-  if (canPlaceShip) {
-    this.ships.push({ coordinates, ship });
+  tryPlaceShip(board, x, y, orientation, ship) {
+    const boardSize = this.boardSize;
 
-    // Place the ship on the board
-    for (let i = 0; i < shipLength; i++) {
-      this.gameBoard[x + i * dx][y + i * dy] = ship; // Mark ship position on the board
+    const isCellOccupied = (row, col) => {
+        return board[row][col].status !== "hidden";
+    };
+
+    const isValidPlacement = (row, col, length, orientation) => {
+        const isAdjacentCellOccupied = (r, c) => {
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    const newRow = r + i;
+                    const newCol = c + j;
+                    if (
+                        newRow >= 0 &&
+                        newRow < boardSize &&
+                        newCol >= 0 &&
+                        newCol < boardSize
+                    ) {
+                        if (isCellOccupied(newRow, newCol)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        };
+
+        if (orientation === "horizontal") {
+            for (let i = 0; i < length; i++) {
+                const newCol = col + i;
+                if (
+                    newCol < 0 ||
+                    newCol >= boardSize ||
+                    isCellOccupied(row, newCol) ||
+                    isAdjacentCellOccupied(row, newCol)
+                ) {
+                    return false;
+                }
+            }
+        } else if (orientation === "vertical") {
+            for (let i = 0; i < length; i++) {
+                const newRow = row + i;
+                if (
+                    newRow < 0 ||
+                    newRow >= boardSize ||
+                    isCellOccupied(newRow, col) ||
+                    isAdjacentCellOccupied(newRow, col)
+                ) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    };
+
+    if (orientation === "horizontal" && y + ship.length <= boardSize) {
+        if (isValidPlacement(x, y, ship.length, orientation)) {
+            for (let i = 0; i < ship.length; i++) {
+                board[x][y + i] = { status: "hidden", ship, part: i };
+            }
+            return true;
+        }
+    } else if (orientation === "vertical" && x + ship.length <= boardSize) {
+        if (isValidPlacement(x, y, ship.length, orientation)) {
+            for (let i = 0; i < ship.length; i++) {
+                board[x + i][y] = { status: "hidden", ship, part: i };
+            }
+            return true;
+        }
     }
-  }else{
-      return null;
-    }
+
+    return false;
 }
 
-  receiveAttack(coords) {
-    const [x, y] = coords;
-    const target = this.gameBoard[x][y];
-  
-    if (target === null) {
-      this.missedAttacks.push(coords);
-      this.gameBoard[x][y] = 'hit';
-    } else if (target !== 'hit') {
-      if (target instanceof Ship) {
-        target.hit(); // Mark ship as hit
-        this.gameBoard[x][y] = 'hit';
+
+
+  receiveAttack(x, y, targetBoard) {
+    const cell = targetBoard[x][y];
+
+    if (cell.status === "hidden") {
+      if (cell.ship !== null) {
+        const { ship } = cell;
+        ship.hit(); // Update the hits array when the ship is hit
+
+        if (ship.isSunk()) {
+          console.log(`${ship.type} sunk!`);
+        }
+
+        cell.status = "hit";
+      } else {
+        cell.status = "miss";
       }
-    } else {
-      this.missedAttacks.push(coords);
     }
   }
-  
+
+  checkAllSunk(ship) {
+    return ship && ship.isSunk();
+  }
 
   allShipsSunk() {
-    return this.ships.every(shipInfo => shipInfo.ship.isSunk());
+    return this.ships.every((ship) => ship.isSunk());
+  }
+
+  getNotSunkShips() {
+    return this.ships.filter((ship) => !ship.isSunk());
   }
 }
-

@@ -8,6 +8,7 @@ module.exports = {
   output: {
     filename: '[name]-[contenthash].js',
     path: path.resolve(__dirname, 'dist'),
+    clean:true,
   },
   module: {
     rules: [
@@ -29,4 +30,5 @@ module.exports = {
     //new webpack.ProgressPlugin(),
     new HtmlWebpackPlugin({ template: './src/index.html' }),
   ],
+  devtool:'inline-source-map',
 };
