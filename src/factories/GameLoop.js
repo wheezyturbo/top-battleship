@@ -57,6 +57,8 @@ export default class GameLoop {
 
       if (this.computerBoard.allShipsSunk()) {
         console.log("You win!");
+        this.showVictory("You Win!");  //newly added
+
         this.gameOver();
       } else {
         setTimeout(() => this.handleComputerTurn(this.playerBoard, this.computerBoard), 500);
@@ -77,10 +79,12 @@ export default class GameLoop {
 
       if (this.playerBoard.allShipsSunk()) {
         console.log("Computer wins!");
+        this.showVictory("Computer Wins!");  // newly added
         this.gameOver();
       }
     } else {
-      console.log("Player's ships already sunk. Computer wins!");
+      console.log("You win");
+      this.showVictory("You Win!"); //newly added;
       this.gameOver();
     }
   }
@@ -90,4 +94,22 @@ export default class GameLoop {
     this.computerBoard.gameOver = true;
     console.log("Game Over!");
   }
+  showVictory(msg){
+    const h1 = document.createElement("h1");
+    h1.textContent = "Game Over!";
+
+    const h2 = document.createElement("h2");
+    h2.textContent = msg;
+
+
+
+    document.body.innerHTML = `
+      <div style='width:100vw;height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;background:black;color:white;'>
+        <h1>${msg}</h1>
+        <h2>Game Over!</h2>
+      </div>
+    `;
+
+  }
+  
 }
