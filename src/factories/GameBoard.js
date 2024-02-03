@@ -1,10 +1,9 @@
-import { Ship } from './Ship.js';
+import { Ship } from "./Ship.js";
 
 export class GameBoard {
   constructor() {
     this.boardSize = 10;
-    this.playerBoard = this.initializeBoard();
-    this.computerBoard = this.initializeBoard();
+    this.board = this.initializeBoard();
     this.ships = [
       new Ship(5, "Carrier"),
       new Ship(4, "Battleship"),
@@ -12,8 +11,7 @@ export class GameBoard {
       new Ship(3, "Submarine"),
       new Ship(2, "Destroyer"),
     ];
-    this.placeShips(this.playerBoard);
-    this.placeShips(this.computerBoard);
+    this.placeShips();
     this.gameOver = false;
   }
 
@@ -29,123 +27,93 @@ export class GameBoard {
     return board;
   }
 
-  placeShips(board) {
+  placeShips() {
     for (const ship of this.ships) {
       let placed = false;
       while (!placed) {
-        const orientation = Math.random() < 0.5 ? "horizontal" : "vertical";
-        const x = Math.floor(Math.random() * this.boardSize);
-        const y = Math.floor(Math.random() * this.boardSize);
-        placed = this.tryPlaceShip(board, x, y, orientation, ship);
+        const { x, y, isVertical } = this.placeShipRandom();
+        placed = this.tryPlaceShip(x, y, isVertical, ship);
       }
     }
   }
 
-  tryPlaceShip(board, x, y, orientation, ship) {
-    const boardSize = this.boardSize;
+  placeShipRandom() {
+    let x, y, isVertical;
+    do {
+      x = Math.floor(Math.random() * this.boardSize);
+      y = Math.floor(Math.random() * this.boardSize);
+      isVertical = Math.random() < 0.5;
+    } while (!this.isShipValid(x, y, isVertical));
 
-    const isCellOccupied = (row, col) => {
-        return board[row][col].status !== "hidden";
-    };
+    return { x, y, isVertical };
+  }
 
-    const isValidPlacement = (row, col, length, orientation) => {
-        const isAdjacentCellOccupied = (r, c) => {
-            for (let i = -1; i <= 1; i++) {
-                for (let j = -1; j <= 1; j++) {
-                    const newRow = r + i;
-                    const newCol = c + j;
-                    if (
-                        newRow >= 0 &&
-                        newRow < boardSize &&
-                        newCol >= 0 &&
-                        newCol < boardSize
-                    ) {
-                        if (isCellOccupied(newRow, newCol)) {
-                            return true;
-                        }
-                    }
-                }
-            }
-            return false;
+  isCordsValid({ x, y }) {
+    return x >= 0 && x < this.boardSize && y >= 0 && y < this.boardSize;
+  }
+
+  isShipPlaceable(start, end, isVertical) {
+    for (let i = start.x; i <= end.x; i++) {
+      for (let j = start.y; j <= end.y; j++) {
+        if (
+          !this.isCordsValid({ x: i, y: j }) ||
+          this.board[i][j].ship !== null
+        ) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  isShipValid(x, y, isVertical) {
+    const ship = new Ship(1, "Temp");
+    const startPoint = { x, y };
+    const endPoint = isVertical
+      ? { x, y: y + ship.getLength() - 1 }
+      : { x: x + ship.getLength() - 1, y };
+
+    return (
+      this.isCordsValid(endPoint) &&
+      this.isShipPlaceable(startPoint, endPoint, isVertical)
+    );
+  }
+
+  tryPlaceShip(x, y, isVertical, ship) {
+    const startPoint = { x, y };
+    const endPoint = isVertical
+      ? { x, y: y + ship.getLength() - 1 }
+      : { x: x + ship.getLength() - 1, y };
+
+    if (this.isShipPlaceable(startPoint, endPoint, isVertical)) {
+      for (let i = 0; i < ship.getLength(); i++) {
+        this.board[isVertical ? x : x + i][isVertical ? y + i : y] = {
+          status: "hidden",
+          ship,
+          part: i,
         };
-
-        if (orientation === "horizontal") {
-            for (let i = 0; i < length; i++) {
-                const newCol = col + i;
-                if (
-                    newCol < 0 ||
-                    newCol >= boardSize ||
-                    isCellOccupied(row, newCol) ||
-                    isAdjacentCellOccupied(row, newCol)
-                ) {
-                    return false;
-                }
-            }
-        } else if (orientation === "vertical") {
-            for (let i = 0; i < length; i++) {
-                const newRow = row + i;
-                if (
-                    newRow < 0 ||
-                    newRow >= boardSize ||
-                    isCellOccupied(newRow, col) ||
-                    isAdjacentCellOccupied(newRow, col)
-                ) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    };
-
-    if (orientation === "horizontal" && y + ship.length <= boardSize) {
-        if (isValidPlacement(x, y, ship.length, orientation)) {
-            for (let i = 0; i < ship.length; i++) {
-                board[x][y + i] = { status: "hidden", ship, part: i };
-            }
-            return true;
-        }
-    } else if (orientation === "vertical" && x + ship.length <= boardSize) {
-        if (isValidPlacement(x, y, ship.length, orientation)) {
-            for (let i = 0; i < ship.length; i++) {
-                board[x + i][y] = { status: "hidden", ship, part: i };
-            }
-            return true;
-        }
+      }
+      return true;
     }
 
     return false;
-}
-
-
-
-  receiveAttack(x, y, targetBoard) {
-    const cell = targetBoard[x][y];
-
-    if (cell.status === "hidden") {
-      if (cell.ship !== null) {
-        const { ship } = cell;
-        ship.hit(); // Update the hits array when the ship is hit
-
-        if (ship.isSunk()) {
-          console.log(`${ship.type} sunk!`);
-        }
-
-        cell.status = "hit";
-      } else {
-        cell.status = "miss";
-      }
-    }
   }
 
+  receiveAttack(x, y) {
+    const cell = this.board[x][y];
+    // Check if there's a ship in the cell
+    if (cell.ship) {
+      cell.status = "hit";
+      cell.ship.hit();
+    } else {
+      cell.status = "miss";
+    }
+  }
   checkAllSunk(ship) {
-    return ship && ship.isSunk();
+    return ship && ship.hits.every((hit) => hit === true);
   }
 
   allShipsSunk() {
-    return this.ships.every((ship) => ship.isSunk());
-  }
-
-  getNotSunkShips() {
-    return this.ships.filter((ship) => !ship.isSunk());
+    return this.ships.every((ship) => ship.isSunk);
   }
 }

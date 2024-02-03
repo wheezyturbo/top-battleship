@@ -8,9 +8,10 @@ export default class GameLoop {
     this.playerBoard = new GameBoard();
     this.computerBoard = new GameBoard();
 
-    this.createBoard(this.playerBoard.playerBoard, this.playerBoardElement, true);
-    this.createBoard(this.computerBoard.computerBoard, this.enemyBoardElement, false);
+    this.createBoard(this.playerBoard.board, this.playerBoardElement, true);
+    this.createBoard(this.computerBoard.board, this.enemyBoardElement, false);
   }
+
   createBoard(board, element, isPlayerBoard) {
     element.innerHTML = "";
 
@@ -49,10 +50,10 @@ export default class GameLoop {
   handlePlayerClick(playerBoard, computerBoard, x, y) {
     if (
       !this.computerBoard.gameOver &&
-      this.computerBoard.computerBoard[x][y].status === "hidden"
+      this.computerBoard.board[x][y].status === "hidden"
     ) {
-      this.computerBoard.receiveAttack(x, y, this.computerBoard.computerBoard);
-      this.createBoard(this.computerBoard.computerBoard, this.enemyBoardElement, false);
+      this.computerBoard.receiveAttack(x, y);
+      this.createBoard(this.computerBoard.board, this.enemyBoardElement, false);
 
       if (this.computerBoard.allShipsSunk()) {
         console.log("You win!");
@@ -64,15 +65,15 @@ export default class GameLoop {
   }
 
   handleComputerTurn(playerBoard, computerBoard) {
-    if (!playerBoard.gameOver) {
+    if (!this.playerBoard.gameOver) {
       let x, y;
       do {
         x = Math.floor(Math.random() * 10);
         y = Math.floor(Math.random() * 10);
-      } while (this.playerBoard.playerBoard[x][y].status !== "hidden");
+      } while (this.playerBoard.board[x][y].status !== "hidden");
 
-      this.playerBoard.receiveAttack(x, y, this.playerBoard.playerBoard);
-      this.createBoard(this.playerBoard.playerBoard, this.playerBoardElement, true);
+      this.playerBoard.receiveAttack(x, y);
+      this.createBoard(this.playerBoard.board, this.playerBoardElement, true);
 
       if (this.playerBoard.allShipsSunk()) {
         console.log("Computer wins!");

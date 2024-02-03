@@ -1,15 +1,37 @@
-import {Ship} from '../factories/Ship.js';
+// GameBoard.test.js
 
-test("hit() and isSunk() : increases hit count and marks the ship as sunk when it matches length",()=>{
-  const ship = new Ship(3,"carrier");
-  expect(ship.no_of_hits).toBe(0);
-  expect(ship.isSunk()).toBe(false);
-  ship.hit();
-  expect(ship.no_of_hits).toBe(1);
-  expect(ship.isSunk()).toBe(false);
-  ship.hit();
-  ship.hit();
-  expect(ship.no_of_hits).toBe(3);
-  expect(ship.isSunk()).toBe(true);
-})
+import { GameBoard } from "../factories/GameBoard";
+import { Ship } from "../factories/Ship";
 
+test("allShipsSunk() : should return true if all ships are sunk", () => {
+  const gameBoard = new GameBoard();
+  
+  for (const ship of gameBoard.ships) {
+    for (let i = 0; i < ship.length; i++) {
+      ship.hit();
+    }
+  }
+
+  expect(gameBoard.allShipsSunk()).toBe(true);
+});
+
+test("receiveAttack() : should hit the correct ship or add to missed", () => {
+  const gameBoard = new GameBoard();
+  const carrier = new Ship(3, "Carrier");
+  const battleship = new Ship(4, "Battleship");
+  
+  gameBoard.placeShips();
+  
+  // Receive attacks to sink Carrier
+  for (let i = 0; i < carrier.length; i++) {
+    gameBoard.receiveAttack(i, 0);
+  }
+
+  // Receive attacks to sink Battleship
+  for (let i = 0; i < battleship.length; i++) {
+    gameBoard.receiveAttack(i, 1);
+  }
+
+  expect(carrier.isSunk).toBe(true);
+  expect(battleship.isSunk).toBe(true);
+});

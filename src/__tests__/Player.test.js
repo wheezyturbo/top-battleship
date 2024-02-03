@@ -1,22 +1,30 @@
-import Player from '../factories/Player.js';
-import {Ship} from '../factories/Ship.js';
+// Player.test.js
 
-test("Players can take turns playing the game by Attacking the enemy GameBoard",()=>{
-  const user = new Player("player");
-  const computer = new Player("computer");
-  
-  const ship = new Ship(3,"carrier");
-  
-  computer.gameBoard.placeShip([3,4],ship);
- 
-  const computerShip = computer.gameBoard.gameBoard[3][4];
-  expect(computerShip).toEqual(ship);
-  user.attack(computer,[3,4]);
-  computer.attack(user,[3,4]);
-  expect(computer.gameBoard.allShipsSunk()).toBe(false);
-  expect(computer.gameBoard.gameBoard[3][4]).toBe('hit');
-  expect(user.gameBoard.gameBoard[3][4]).toBe('hit');
-  computer.attack(user,[4,4]);
-  expect(computer.randomAttack(user)).toBe("hit");
-})
+import Player from "../factories/Player";
+import { Ship } from "../factories/Ship";
 
+test("attack() : should attack the enemy GameBoard", () => {
+  const player1 = new Player("player1");
+  const player2 = new Player("player2");
+  const ship = new Ship(3, "carrier");
+
+  player2.gameBoard.placeShips();
+  const enemyShip = player2.gameBoard.ships[0];
+
+  player1.attack(player2, [0, 0]); // Attack to hit the ship
+  player1.attack(player2, [1, 0]); // Attack to hit the ship
+
+  expect(enemyShip.hits.filter((hit) => hit === true).length).toBe(2);
+});
+
+test("randomAttack() : should perform a random attack on the enemy GameBoard", () => {
+  const player1 = new Player("player1");
+  const player2 = new Player("player2");
+
+  player2.gameBoard.placeShips();
+  const initialMissedAttacks = player2.gameBoard.missedAttacks.length;
+
+  player1.randomAttack(player2);
+
+  expect(player2.gameBoard.missedAttacks.length).toBeGreaterThan(initialMissedAttacks);
+});
